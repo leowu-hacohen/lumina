@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 
@@ -88,7 +89,7 @@ function WaveformBars({ isSpeaking }: { isSpeaking: boolean }) {
           style={{
             width: 3,
             borderRadius: 2,
-            background: isSpeaking ? "rgba(99, 102, 241, 0.45)" : "rgba(0, 0, 0, 0.14)",
+            background: isSpeaking ? "rgba(123, 111, 160, 0.45)" : "rgba(0, 0, 0, 0.14)",
             transition: "background 0.4s ease",
           }}
         />
@@ -237,6 +238,62 @@ function Orb({
   );
 }
 
+function CustomCursor() {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    const el = cursorRef.current;
+    if (!el) return;
+
+    const onMove = (e: MouseEvent) => {
+      el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    };
+
+    const onEnter = () => setHovered(true);
+    const onLeave = () => setHovered(false);
+
+    const targets = document.querySelectorAll<HTMLElement>(
+      'button, a, [role="button"], [style*="cursor: pointer"], .cursor-pointer'
+    );
+    targets.forEach(t => {
+      t.addEventListener("mouseenter", onEnter);
+      t.addEventListener("mouseleave", onLeave);
+    });
+
+    window.addEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      targets.forEach(t => {
+        t.removeEventListener("mouseenter", onEnter);
+        t.removeEventListener("mouseleave", onLeave);
+      });
+    };
+  }, []);
+
+  return (
+    <div
+      ref={cursorRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        pointerEvents: "none",
+        zIndex: 9999,
+        width: hovered ? 32 : 10,
+        height: hovered ? 32 : 10,
+        borderRadius: "50%",
+        background: hovered ? "transparent" : "#1A1A1A",
+        border: hovered ? "1.5px solid #1A1A1A" : "none",
+        opacity: hovered ? 0.15 : 1,
+        marginLeft: hovered ? -16 : -5,
+        marginTop: hovered ? -16 : -5,
+        transition: "width 0.2s ease, height 0.2s ease, opacity 0.2s ease, margin 0.2s ease, background 0.2s ease, border 0.2s ease",
+      }}
+    />
+  );
+}
+
 function LuminaApp() {
   const [agentName, setAgentName] = useState("Lumina");
 
@@ -272,12 +329,15 @@ function LuminaApp() {
   };
 
   return (
-    <div className="relative h-screen w-full select-none overflow-hidden" style={{ background: "#F5F4EF" }}>
+    <div className="relative h-screen w-full select-none overflow-hidden" style={{ background: "#F5F4EF", cursor: "none" }}>
+      <CustomCursor />
       {/* Wordmark — DM Sans */}
       <header className="absolute top-0 left-0 p-8 z-10">
-        <span style={{ fontFamily: "var(--font-dm-sans)", fontSize: 18, fontWeight: 500, letterSpacing: "0.06em", color: "#1A1A1A" }}>
-          Lumina
-        </span>
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <span style={{ fontFamily: "var(--font-dm-sans)", fontSize: 18, fontWeight: 500, letterSpacing: "0.01em", color: "#1A1A1A" }}>
+            Lumina
+          </span>
+        </Link>
       </header>
 
       {/* Orb + badge + status — true center */}
@@ -294,29 +354,25 @@ function LuminaApp() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 7,
-              padding: "5px 15px",
-              borderRadius: 999,
-              background: "rgba(0,0,0,0.055)",
-              border: "1px solid rgba(0,0,0,0.075)",
+              gap: 6,
             }}
           >
             {isActive && (
               <motion.span
-                animate={{ opacity: [1, 0.2, 1] }}
+                animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 1.4, repeat: Infinity }}
                 style={{
                   display: "block",
-                  width: 6,
-                  height: 6,
+                  width: 5,
+                  height: 5,
                   borderRadius: "50%",
-                  background: isConnected ? cfg.dot : "#E8A040",
+                  background: isConnected ? "#8BAF8B" : "#B8A898",
                   flexShrink: 0,
                   transition: "background 1.5s ease",
                 }}
               />
             )}
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#4E4E4E", letterSpacing: "0.01em" }}>
+            <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(0,0,0,0.4)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
               {agentName}
             </span>
           </motion.div>
@@ -369,7 +425,7 @@ function LuminaApp() {
             whileTap={{ scale: 0.92 }}
             animate={
               isConnected
-                ? { boxShadow: ["0 0 0 0px rgba(99, 102, 241, 0.35)", "0 0 0 14px rgba(99, 102, 241, 0)"] }
+                ? { boxShadow: ["0 0 0 0px rgba(123, 111, 160, 0.35)", "0 0 0 14px rgba(123, 111, 160, 0)"] }
                 : { boxShadow: "0 0 0 0px rgba(0,0,0,0)" }
             }
             transition={isConnected ? { duration: 1.6, repeat: Infinity } : { duration: 0.25 }}
@@ -382,7 +438,7 @@ function LuminaApp() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: isActive ? "#6366F1" : "#2E2E2E",
+              background: isActive ? "#7B6FA0" : "#2E2E2E",
               color: isActive ? "#FFFFFF" : "#808080",
               outline: "none",
               transition: "background 0.35s ease, color 0.35s ease",

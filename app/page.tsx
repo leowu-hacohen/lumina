@@ -4,6 +4,64 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 
+// ─── Custom cursor ────────────────────────────────────────────────────────────
+
+function CustomCursor() {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    const el = cursorRef.current;
+    if (!el) return;
+
+    const onMove = (e: MouseEvent) => {
+      el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    };
+
+    const onEnter = () => setHovered(true);
+    const onLeave = () => setHovered(false);
+
+    const targets = document.querySelectorAll<HTMLElement>(
+      'button, a, [role="button"], [style*="cursor: pointer"], .cursor-pointer'
+    );
+    targets.forEach(t => {
+      t.addEventListener("mouseenter", onEnter);
+      t.addEventListener("mouseleave", onLeave);
+    });
+
+    window.addEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      targets.forEach(t => {
+        t.removeEventListener("mouseenter", onEnter);
+        t.removeEventListener("mouseleave", onLeave);
+      });
+    };
+  }, []);
+
+  return (
+    <div
+      ref={cursorRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        pointerEvents: "none",
+        zIndex: 9999,
+        width: hovered ? 32 : 10,
+        height: hovered ? 32 : 10,
+        borderRadius: "50%",
+        background: hovered ? "transparent" : "#1A1A1A",
+        border: hovered ? "1.5px solid #1A1A1A" : "none",
+        opacity: hovered ? 0.15 : 1,
+        marginLeft: hovered ? -16 : -5,
+        marginTop: hovered ? -16 : -5,
+        transition: "width 0.2s ease, height 0.2s ease, opacity 0.2s ease, margin 0.2s ease, background 0.2s ease, border 0.2s ease",
+      }}
+    />
+  );
+}
+
 // ─── Shared tiny FadeIn wrapper ──────────────────────────────────────────────
 
 function FadeIn({
@@ -30,7 +88,161 @@ function FadeIn({
   );
 }
 
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+
+function Navbar() {
+  const { scrollY } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const unsub = scrollY.on("change", v => setScrolled(v > 80));
+    return unsub;
+  }, [scrollY]);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const linkStyle: React.CSSProperties = {
+    fontSize: 14,
+    fontWeight: 500,
+    color: scrolled ? "#111" : "rgba(0,0,0,0.7)",
+    background: "none",
+    border: "none",
+    cursor: "none",
+    padding: "4px 0",
+    letterSpacing: "-0.01em",
+    transition: "color 0.2s ease",
+    whiteSpace: "nowrap",
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
+        padding: scrolled ? "16px max(16px, 2vw)" : "0",
+        transition: "padding 0.35s ease",
+      }}
+    >
+      <motion.nav
+        layout
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        style={{
+          pointerEvents: "auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: scrolled ? "auto" : "100%",
+          maxWidth: scrolled ? 520 : "none",
+          padding: scrolled ? "10px 20px" : "22px max(32px, 7vw)",
+          background: scrolled ? "rgba(250,249,245,0.92)" : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          border: scrolled ? "1px solid rgba(0,0,0,0.08)" : "1px solid transparent",
+          borderRadius: scrolled ? 999 : 0,
+          boxShadow: scrolled ? "0 4px 24px rgba(0,0,0,0.07)" : "none",
+          gap: 28,
+          transition: "background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
+        }}
+      >
+        {/* Wordmark */}
+        <span
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{ fontFamily: "var(--font-dm-sans)", fontSize: 17, fontWeight: 500, letterSpacing: "0.04em", color: "#111", cursor: "pointer", flexShrink: 0 }}
+        >
+          Lumina
+        </span>
+
+        {/* Links — hidden on mobile */}
+        <div className="hidden sm:flex" style={{ alignItems: "center", gap: 28 }}>
+          <button onClick={() => scrollTo("agents")} style={linkStyle}>How it works</button>
+          <button onClick={() => scrollTo("problem")} style={linkStyle}>The problem</button>
+          <Link
+            href="/lumina"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#fff",
+              background: "#111",
+              padding: "7px 16px",
+              borderRadius: 999,
+              textDecoration: "none",
+              letterSpacing: "-0.01em",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            Try Lumina
+          </Link>
+        </div>
+
+        {/* Mobile: only Try Lumina button */}
+        <div className="flex sm:hidden">
+          <Link
+            href="/lumina"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#fff",
+              background: "#111",
+              padding: "7px 16px",
+              borderRadius: 999,
+              textDecoration: "none",
+            }}
+          >
+            Try Lumina
+          </Link>
+        </div>
+      </motion.nav>
+    </div>
+  );
+}
+
 // ─── Hero orb (300 px, Lumina palette, always-idle float) ────────────────────
+
+const TAGLINES = [
+  { text: "ElevenLabs Conversational AI · Multi-Agent Orchestration", color: "rgba(184, 134, 11, 0.8)" },
+  { text: "Built for BIM majors breaking into Product Management",     color: "rgba(74, 136, 232, 0.8)" },
+  { text: "Scholar · The Closer · The Visionary",                      color: "rgba(128, 40, 200, 0.8)" },
+];
+
+function CyclingTagline() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex(i => (i + 1) % TAGLINES.length), 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div style={{ height: 16, overflow: "hidden", position: "relative", marginBottom: 22 }}>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={index}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.45, ease: "easeInOut" }}
+          style={{
+            position: "absolute",
+            fontSize: 11, fontWeight: 500, letterSpacing: "0.12em",
+            color: TAGLINES[index].color, textTransform: "uppercase",
+            margin: 0, whiteSpace: "nowrap",
+          }}
+        >
+          {TAGLINES[index].text}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function HeroOrb() {
   return (
@@ -169,6 +381,91 @@ const AGENTS = [
 ];
 
 // ─── Button components ────────────────────────────────────────────────────────
+
+type AgentDef = typeof AGENTS[number];
+
+function AgentCard({ agent, delay }: { agent: AgentDef; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, margin: "-60px" });
+  const [shine, setShine] = useState({ x: 50, y: 50 });
+  const [hovering, setHovering] = useState(false);
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    const rotY =  dx * 8;
+    const rotX = -dy * 8;
+    const shineX = ((e.clientX - rect.left) / rect.width) * 100;
+    const shineY = ((e.clientY - rect.top)  / rect.height) * 100;
+    if (ref.current) {
+      ref.current.style.transition = "transform 0.15s ease";
+      ref.current.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    }
+    setShine({ x: shineX, y: shineY });
+  };
+
+  const onMouseLeave = () => {
+    if (ref.current) {
+      ref.current.style.transition = "transform 0.4s ease";
+      ref.current.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg)";
+    }
+    setHovering(false);
+  };
+
+  return (
+    <div ref={containerRef}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+        transition={{ duration: 0.55, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+      >
+        <div
+          ref={ref}
+          onMouseMove={onMouseMove}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={onMouseLeave}
+          style={{
+            padding: "32px 28px",
+            borderRadius: 20,
+            background: agent.bg,
+            border: `1px solid ${agent.border}`,
+            height: "100%",
+            display: "flex", flexDirection: "column", gap: 20,
+            position: "relative",
+            overflow: "hidden",
+            willChange: "transform",
+          }}
+        >
+          {/* Shine overlay */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: 20,
+              background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.15) 0%, transparent 60%)`,
+              opacity: hovering ? 1 : 0,
+              transition: "opacity 0.2s ease",
+              pointerEvents: "none",
+            }}
+          />
+          <MiniOrb c1={agent.c1} c2={agent.c2} c3={agent.c3} />
+          <div>
+            <p style={{ fontSize: 17, fontWeight: 600, color: "#111", lineHeight: 1.3, marginBottom: 10 }}>
+              {agent.title}
+            </p>
+            <p style={{ fontSize: 14.5, color: "rgba(0,0,0,0.5)", lineHeight: 1.55 }}>
+              {agent.description}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 function PrimaryButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -474,8 +771,8 @@ function IntroOverlay({ onComplete }: { onComplete: () => void }) {
 
       <p style={{
         fontFamily: "var(--font-dm-sans)",
-        fontSize: 11, letterSpacing: "0.3em",
-        color: "rgba(0,0,0,0.4)",
+        fontSize: 11, letterSpacing: "0.02em",
+        color: "#1A1A1A",
         width: "6ch", textAlign: "center",
         margin: 0,
       }}>
@@ -505,7 +802,9 @@ export default function LandingPage() {
   const heroOrbY  = useTransform(scrollY, [0, 300], [0, -60]);
 
   return (
-    <>
+    <div style={{ cursor: "none" }}>
+      <CustomCursor />
+      <Navbar />
       <AnimatePresence>
         {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
       </AnimatePresence>
@@ -535,18 +834,13 @@ export default function LandingPage() {
             style={{ y: heroTextY, display: "flex", flexDirection: "column", justifyContent: "center", gap: 0 }}
           >
             {/* Tagline */}
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              style={{
-                fontSize: 11, fontWeight: 500, letterSpacing: "0.12em",
-                color: "rgba(0,0,0,0.38)", textTransform: "uppercase",
-                marginBottom: 22,
-              }}
             >
-              ElevenLabs Conversational AI · Multi-Agent · Next.js 15
-            </motion.p>
+              <CyclingTagline />
+            </motion.div>
 
             {/* Wordmark */}
             <motion.h1
@@ -579,7 +873,7 @@ export default function LandingPage() {
                 marginBottom: 40,
               }}
             >
-              your multi-agent AI — built for the students who do it all
+              your multi-agent AI, built for the students who do it all
             </motion.p>
 
             {/* Buttons */}
@@ -606,7 +900,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── AGENTS ───────────────────────────────────────────────────── */}
-      <section style={{ padding: "80px max(32px, 7vw) 100px" }}>
+      <section id="agents" style={{ padding: "80px max(32px, 7vw) 100px" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
           <FadeIn>
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", color: "rgba(0,0,0,0.35)", textTransform: "uppercase", marginBottom: 14 }}>
@@ -626,38 +920,14 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {AGENTS.map((agent, i) => (
-              <FadeIn key={agent.title} delay={i * 0.1}>
-                <div
-                  style={{
-                    padding: "32px 28px",
-                    borderRadius: 20,
-                    background: agent.bg,
-                    border: `1px solid ${agent.border}`,
-                    height: "100%",
-                    display: "flex", flexDirection: "column", gap: 20,
-                  }}
-                >
-                  <MiniOrb c1={agent.c1} c2={agent.c2} c3={agent.c3} />
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: agent.label, marginBottom: 8 }}>
-                      {agent.title}
-                    </p>
-                    <p style={{ fontSize: 17, fontWeight: 600, color: "#111", lineHeight: 1.3, marginBottom: 10 }}>
-                      {agent.title}
-                    </p>
-                    <p style={{ fontSize: 14.5, color: "rgba(0,0,0,0.5)", lineHeight: 1.55 }}>
-                      {agent.description}
-                    </p>
-                  </div>
-                </div>
-              </FadeIn>
+              <AgentCard key={agent.title} agent={agent} delay={i * 0.12} />
             ))}
           </div>
         </div>
       </section>
 
       {/* ── PROBLEM ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "80px max(32px, 7vw) 100px" }}>
+      <section id="problem" style={{ padding: "80px max(32px, 7vw) 100px" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
           <FadeIn>
             <h2
@@ -678,7 +948,7 @@ export default function LandingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {[
                 { label: "Every day looks different", body: "BIM studio on Monday, PM case prep on Wednesday, job app review on Friday." },
-                { label: "Different modes, different mindset", body: "Technical problem-solving, behavioral storytelling, and strategic planning don't mix — and generic AI doesn't know which one you need." },
+                { label: "Different modes, different mindset", body: "Technical problem-solving, behavioral storytelling, and strategic planning don't mix. Generic AI doesn't know which one you need." },
                 { label: "No program context", body: "Generic AI has never heard of your BIM track, your professors, or your specific career trajectory." },
                 { label: "Stop re-explaining yourself", body: "Each specialized agent knows its lane. You just pick who you're talking to." },
               ].map((item, i) => (
@@ -703,26 +973,56 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
-      <section style={{ background: "#E9E8E1", padding: "100px max(32px, 7vw)" }}>
+      <section style={{ background: "#F5F4EF", padding: "120px max(32px, 7vw)", position: "relative", overflow: "hidden" }}>
+        {/* Background ambient orbs */}
+        <motion.div animate={{ x: [0,30,-20,0], y: [0,-25,20,0] }} transition={{ duration: 9,  repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "#EF8070", filter: "blur(60px)", opacity: 0.18, top: "15%",    left: "10%",   pointerEvents: "none" }} />
+        <motion.div animate={{ x: [0,-25,20,0], y: [0,20,-30,0] }} transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: "absolute", width: 100, height: 100, borderRadius: "50%", background: "#A472D8", filter: "blur(50px)", opacity: 0.15, top: "15%",    right: "10%",  pointerEvents: "none" }} />
+        <motion.div animate={{ x: [0,20,-30,0], y: [0,-20,15,0] }} transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: "absolute", width: 90,  height: 90,  borderRadius: "50%", background: "#6AA8E2", filter: "blur(45px)", opacity: 0.14, bottom: "15%", left: "50%",   transform: "translateX(-50%)", pointerEvents: "none" }} />
+
         <FadeIn>
-          <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
-            <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", color: "rgba(0,0,0,0.35)", textTransform: "uppercase" }}>
-              Get started
-            </p>
-            <h2
-              style={{
-                fontFamily: "var(--font-dm-sans)",
-                fontSize: "clamp(32px, 4vw, 52px)",
-                fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.1,
-                color: "#111",
-              }}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}>
+
+            {/* Breathing orb */}
+            <motion.div
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ width: 200, height: 200, borderRadius: "50%", overflow: "hidden", position: "relative", flexShrink: 0, boxShadow: "0 12px 48px rgba(155, 115, 215, 0.2)" }}
             >
-              Ready to talk to Lumina?
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #EDD5C3 0%, #D5BCE8 55%, #BBCFEA 100%)" }} />
+              <motion.div
+                animate={{ x: [0, 60, -44, 34, 0], y: [0, -44, 60, -34, 0] }}
+                transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
+                style={{ position: "absolute", width: "75%", height: "75%", top: "-10%", left: "-10%", background: "#EF8070", filter: "blur(32px)", borderRadius: "50%" }}
+              />
+              <motion.div
+                animate={{ x: [0, -52, 34, -24, 0], y: [0, 52, -34, 24, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                style={{ position: "absolute", width: "68%", height: "68%", top: "-8%", right: "-8%", background: "#A472D8", filter: "blur(28px)", borderRadius: "50%" }}
+              />
+              <motion.div
+                animate={{ x: [0, 46, -60, 28, 0], y: [0, 56, -34, -46, 0] }}
+                transition={{ duration: 6.6, repeat: Infinity, ease: "easeInOut" }}
+                style={{ position: "absolute", width: "62%", height: "62%", bottom: "-8%", right: "-8%", background: "#6AA8E2", filter: "blur(30px)", borderRadius: "50%" }}
+              />
+              <motion.div
+                animate={{ x: [0, -40, 52, -32, 0], y: [0, -52, 32, 46, 0] }}
+                transition={{ duration: 7.8, repeat: Infinity, ease: "easeInOut" }}
+                style={{ position: "absolute", width: "60%", height: "60%", bottom: "-8%", left: "-8%", background: "#BBA8E8", filter: "blur(26px)", borderRadius: "50%" }}
+              />
+              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 34% 27%, rgba(255,255,255,0.38) 0%, transparent 52%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 50%, transparent 42%, rgba(35,15,55,0.16) 100%)" }} />
+            </motion.div>
+
+            <div style={{ height: 24 }} />
+            <h2 style={{ fontFamily: "var(--font-dm-sans)", fontSize: 42, fontWeight: 600, letterSpacing: "-0.02em", color: "#111", margin: 0 }}>
+              Start talking.
             </h2>
-            <p style={{ fontSize: 17, color: "rgba(0,0,0,0.48)", lineHeight: 1.55 }}>
-              Your AI study partner, interview coach, and career strategist — all in one conversation.
-            </p>
+            <div style={{ height: 32 }} />
             <PrimaryButton href="/lumina">Try Lumina →</PrimaryButton>
+
           </div>
         </FadeIn>
       </section>
@@ -739,6 +1039,6 @@ export default function LandingPage() {
 
     </div>
       </motion.div>
-    </>
+    </div>
   );
 }
