@@ -368,7 +368,7 @@ function LuminaApp() {
               backdropFilter: "blur(8px)",
             }}
           >
-            <span style={{ fontFamily: "'General Sans', sans-serif", fontWeight: 500, fontSize: 11, color: "rgba(0,0,0,0.65)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            <span style={{ fontFamily: "'General Sans', sans-serif", fontWeight: 600, fontSize: 11, color: "#000000", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               {agentName}
             </span>
           </motion.div>
