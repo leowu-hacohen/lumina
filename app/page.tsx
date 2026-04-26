@@ -573,7 +573,7 @@ function AgentCycler() {
   // Cleanup audio on unmount
   useEffect(() => () => { audioRef.current?.pause(); }, []);
 
-  const playAudio = async (idx: number) => {
+  const playAgentVoice = async (idx: number) => {
     audioRef.current?.pause();
     audioRef.current = null;
     setAudioState("loading");
@@ -583,14 +583,15 @@ function AgentCycler() {
     const startPlayback = (url: string, revoke = false) => {
       const audio = new Audio(url);
       audioRef.current = audio;
-      setAudioState("playing");
-      audio.onended = () => {
-        setAudioState("idle");
+      const cleanup = () => {
         if (revoke) URL.revokeObjectURL(url);
-        audioRef.current = null;
+        if (audioRef.current === audio) audioRef.current = null;
       };
-      audio.onerror = () => { setAudioState("idle"); audioRef.current = null; };
-      audio.play();
+      audio.onended = () => { setAudioState("idle"); cleanup(); };
+      audio.onerror = () => { setAudioState("idle"); cleanup(); };
+      audio.play()
+        .then(() => setAudioState("playing"))
+        .catch(err => { console.error("Audio playback blocked:", err); setAudioState("idle"); cleanup(); });
     };
 
     // Try static file first (free, instant after generation)
@@ -620,7 +621,7 @@ function AgentCycler() {
     setPaused(true);
     setActiveIdx(idx);
     if (!hintShown) setHintShown(true);
-    playAudio(idx);
+    playAgentVoice(idx);
   };
 
   const audioActive = audioState !== "idle";
