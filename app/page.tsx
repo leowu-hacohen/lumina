@@ -62,6 +62,7 @@ function CustomCursor() {
   );
 }
 
+
 // ─── Shared tiny FadeIn wrapper ──────────────────────────────────────────────
 
 function FadeIn({
@@ -519,11 +520,22 @@ const CYCLER_AGENTS = [
   { name: "The Visionary",color: "#8028C8" },
 ];
 
-// Replace these voice IDs with the ones assigned in your ElevenLabs dashboard
 const AGENT_TTS = [
-  { voiceId: "21m00Tcm4TlvDq8ikWAM", text: "I'm the Scholar. Ask me anything about your coursework." },
-  { voiceId: "AZnzlk1XvdvUeBnXmlld", text: "The Closer. Let's get to work on your interview prep." },
-  { voiceId: "EXAVITQu4vr4xnSDxMaL", text: "Visionary. What are we building toward?" },
+  {
+    staticFile: "/audio/scholar.mp3",
+    voiceId: "MClEFoImJXBTgLwdLI5n",
+    text: "Hi, I'm the Scholar. I can help you synthesize your research and connect the dots between your classes and your career goals.",
+  },
+  {
+    staticFile: "/audio/closer.mp3",
+    voiceId: "QngvLQR8bsLR5bzoa6Vv",
+    text: "I'm the Closer. Let's get these deliverables across the finish line and perfect your applications.",
+  },
+  {
+    staticFile: "/audio/visionary.mp3",
+    voiceId: "7EzWGsX10sAS4c9m9cPf",
+    text: "I'm the Visionary. Let's think big about your product trajectory and map out your long-term path to the industry.",
+  },
 ];
 
 function TinyBars({ active }: { active: boolean }) {
@@ -564,36 +576,40 @@ function AgentCycler() {
   const playAudio = async (idx: number) => {
     audioRef.current?.pause();
     audioRef.current = null;
-
-    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
-    if (!apiKey) return;
-
-    const { voiceId, text } = AGENT_TTS[idx];
     setAudioState("loading");
 
-    try {
-      const res = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
-        {
-          method: "POST",
-          headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text,
-            model_id: "eleven_multilingual_v2",
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-          }),
-        }
-      );
-      if (!res.ok) throw new Error(`TTS ${res.status}`);
+    const { staticFile, voiceId, text } = AGENT_TTS[idx];
 
-      const url = URL.createObjectURL(await res.blob());
+    const startPlayback = (url: string, revoke = false) => {
       const audio = new Audio(url);
       audioRef.current = audio;
       setAudioState("playing");
-
-      audio.onended = () => { setAudioState("idle"); URL.revokeObjectURL(url); audioRef.current = null; };
+      audio.onended = () => {
+        setAudioState("idle");
+        if (revoke) URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
       audio.onerror = () => { setAudioState("idle"); audioRef.current = null; };
       audio.play();
+    };
+
+    // Try static file first (free, instant after generation)
+    const probe = await fetch(staticFile, { method: "HEAD" }).catch(() => null);
+    if (probe?.ok) {
+      startPlayback(staticFile);
+      return;
+    }
+
+    // Fall back to server-side API route (keeps API key off the client)
+    try {
+      const res = await fetch("/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voiceId, text }),
+      });
+      if (!res.ok) throw new Error(`TTS ${res.status}`);
+      const url = URL.createObjectURL(await res.blob());
+      startPlayback(url, true);
     } catch (e) {
       console.error("TTS error:", e);
       setAudioState("idle");
@@ -892,7 +908,7 @@ export default function LandingPage() {
               className="flex flex-wrap gap-3"
             >
               <PrimaryButton href="/lumina">Try Lumina →</PrimaryButton>
-              <OutlineButton href="#">Live Demo</OutlineButton>
+              <OutlineButton href="/demo">Live Demo</OutlineButton>
               <OutlineButton href="https://github.com/leowu-hacohen/lumina" target="_blank" rel="noopener noreferrer">GitHub Repo</OutlineButton>
             </motion.div>
           </motion.div>
@@ -922,7 +938,7 @@ export default function LandingPage() {
                 color: "#111", marginBottom: 56,
               }}
             >
-              One voice.<br />Three minds.
+              Three minds.<br />One conversation.
             </h2>
           </FadeIn>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
@@ -294,21 +294,21 @@ function CustomCursor() {
   );
 }
 
-function LuminaApp() {
-  const [agentName, setAgentName] = useState("Lumina");
+function LuminaApp({ agentName, setAgentName }: { agentName: string; setAgentName: (name: string) => void }) {
+  const handleMessage = useCallback((payload: { role: string; message: string }) => {
+    if (payload.role !== "agent") return;
+    const text = payload.message;
+    console.log("agent message:", text);
+    if (text.includes("Scholar"))        setAgentName("Scholar");
+    else if (text.includes("Closer"))    setAgentName("The Closer");
+    else if (text.includes("Visionary")) setAgentName("Visionary");
+    else if (text.includes("Lumina"))    setAgentName("Lumina");
+    else                                 console.log("NO MATCH:", text);
+  }, [setAgentName]);
 
-  const { startSession, endSession, isSpeaking, status } = useConversation({
-    onMessage: (payload) => {
-      if (payload.role !== "agent") return;
-      const text = payload.message;
-      console.log("agent message:", text);
-      if (text.includes("Scholar"))         setAgentName("Scholar");
-      else if (text.includes("Closer"))     setAgentName("The Closer");
-      else if (text.includes("Visionary"))  setAgentName("Visionary");
-      else if (text.includes("Lumina"))     setAgentName("Lumina");
-      else                                  console.log("NO MATCH:", text);
-    },
-  });
+  const conversationConfig = useMemo(() => ({ onMessage: handleMessage }), [handleMessage]);
+
+  const { startSession, endSession, isSpeaking, status } = useConversation(conversationConfig);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -421,27 +421,48 @@ function LuminaApp() {
             whileTap={{ scale: 0.92 }}
             animate={
               isConnected
-                ? { boxShadow: ["0 0 0 0px rgba(123, 111, 160, 0.35)", "0 0 0 14px rgba(123, 111, 160, 0)"] }
-                : { boxShadow: "0 0 0 0px rgba(0,0,0,0)" }
+                ? { boxShadow: ["0 8px 40px rgba(123,111,160,0.4), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 0px rgba(123,111,160,0.35)", "0 8px 40px rgba(123,111,160,0.4), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 14px rgba(123,111,160,0)"] }
+                : { boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 0 0px rgba(0,0,0,0)" }
             }
             transition={isConnected ? { duration: 1.6, repeat: Infinity } : { duration: 0.25 }}
             style={{
               width: 62,
               height: 62,
               borderRadius: "50%",
-              border: "none",
+              border: isActive ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(255,255,255,0.12)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: isActive ? "#7B6FA0" : "#2E2E2E",
-              color: isActive ? "#FFFFFF" : "#808080",
+              background: isActive ? "rgba(240,235,255,0.25)" : "rgba(20,18,30,0.65)",
+              backdropFilter: "blur(20px)",
+              color: "#FFFFFF",
               outline: "none",
-              transition: "background 0.35s ease, color 0.35s ease",
+              position: "relative",
+              overflow: "hidden",
+              transition: "background 0.8s ease, border-color 0.8s ease",
             }}
             aria-label={isActive ? "Stop conversation" : "Start conversation"}
           >
-            {isActive ? <StopIcon /> : <MicIcon />}
+            {/* Liquid glass blobs */}
+            <motion.div
+              animate={{ x: [-6,6,-4,6,-6], y: [-4,4,-6,4,-4], background: isActive ? "rgba(239,128,112,0.5)" : "rgba(180,60,80,0.6)" }}
+              transition={{ x: { duration: 4, repeat: Infinity, ease: "easeInOut" }, y: { duration: 4, repeat: Infinity, ease: "easeInOut" }, background: { duration: 0.8 } }}
+              style={{ position: "absolute", width: 24, height: 24, borderRadius: "50%", filter: "blur(10px)", pointerEvents: "none", top: "20%", left: "15%" }}
+            />
+            <motion.div
+              animate={{ x: [6,-6,4,-6,6], y: [4,-6,6,-4,4], background: isActive ? "rgba(180,150,230,0.5)" : "rgba(80,40,120,0.6)" }}
+              transition={{ x: { duration: 5, repeat: Infinity, ease: "easeInOut" }, y: { duration: 5, repeat: Infinity, ease: "easeInOut" }, background: { duration: 0.8 } }}
+              style={{ position: "absolute", width: 20, height: 20, borderRadius: "50%", filter: "blur(8px)", pointerEvents: "none", bottom: "20%", right: "15%" }}
+            />
+            <motion.div
+              animate={{ x: [-4,4,-6,4,-4], y: [6,-4,4,-6,6], background: isActive ? "rgba(106,168,226,0.45)" : "rgba(30,60,120,0.5)" }}
+              transition={{ x: { duration: 6, repeat: Infinity, ease: "easeInOut" }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" }, background: { duration: 0.8 } }}
+              style={{ position: "absolute", width: 18, height: 18, borderRadius: "50%", filter: "blur(8px)", pointerEvents: "none", top: "45%", right: "20%" }}
+            />
+            <span style={{ position: "relative", zIndex: 1, display: "flex", opacity: 0.9, color: "#FFFFFF" }}>
+              {isActive ? <StopIcon /> : <MicIcon />}
+            </span>
           </motion.button>
 
           <WaveformBars isSpeaking={isSpeaking} />
@@ -452,9 +473,10 @@ function LuminaApp() {
 }
 
 export default function Home() {
+  const [agentName, setAgentName] = useState("Lumina");
   return (
     <ConversationProvider>
-      <LuminaApp />
+      <LuminaApp agentName={agentName} setAgentName={setAgentName} />
     </ConversationProvider>
   );
 }
