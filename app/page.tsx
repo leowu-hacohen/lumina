@@ -489,9 +489,9 @@ function PrimaryButton({ href, children }: { href: string; children: React.React
   );
 }
 
-function OutlineButton({ href, children }: { href: string; children: React.ReactNode }) {
+function OutlineButton({ href, children, target, rel }: { href: string; children: React.ReactNode; target?: string; rel?: string }) {
   return (
-    <Link href={href}>
+    <Link href={href} target={target} rel={rel}>
       <motion.span
         whileHover={{ y: -2, background: "rgba(0,0,0,0.04)" }}
         whileTap={{ scale: 0.97 }}
@@ -893,7 +893,7 @@ export default function LandingPage() {
             >
               <PrimaryButton href="/lumina">Try Lumina →</PrimaryButton>
               <OutlineButton href="#">Live Demo</OutlineButton>
-              <OutlineButton href="#">GitHub Repo</OutlineButton>
+              <OutlineButton href="https://github.com/leowu-hacohen/lumina" target="_blank" rel="noopener noreferrer">GitHub Repo</OutlineButton>
             </motion.div>
           </motion.div>
 
