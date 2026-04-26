@@ -616,7 +616,7 @@ function AgentCycler() {
         padding: "36px 32px", background: "#EDECE6",
         display: "flex", flexDirection: "column", gap: 28,
       }}>
-        <p style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(0,0,0,0.35)", margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(160,100,140,0.65)", margin: 0 }}>
           Switch modes instantly
         </p>
 
@@ -744,6 +744,13 @@ function IntroOverlay({ onComplete }: { onComplete: () => void }) {
   const [displayText, setDisplayText] = useState("");
 
   useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://api.fontshare.com/v2/css?f[]=general-sans@500,600&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
+  useEffect(() => {
     const full = "LUMINA";
     let i = 0;
     const t = setInterval(() => {
@@ -770,7 +777,8 @@ function IntroOverlay({ onComplete }: { onComplete: () => void }) {
       <IntroOrb />
 
       <p style={{
-        fontFamily: "var(--font-dm-sans)",
+        fontFamily: "'General Sans', sans-serif",
+        fontWeight: 600,
         fontSize: 11, letterSpacing: "0.02em",
         color: "#1A1A1A",
         width: "6ch", textAlign: "center",
@@ -854,7 +862,7 @@ export default function LandingPage() {
                 lineHeight: 0.92,
                 letterSpacing: "-0.03em",
                 color: "#111",
-                marginBottom: 28,
+                margin: "0 0 28px -0.03em",
               }}
             >
               Lumina
@@ -903,7 +911,7 @@ export default function LandingPage() {
       <section id="agents" style={{ padding: "80px max(32px, 7vw) 100px" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
           <FadeIn>
-            <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", color: "rgba(0,0,0,0.35)", textTransform: "uppercase", marginBottom: 14 }}>
+            <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", color: "rgba(160,100,140,0.65)", textTransform: "uppercase", marginBottom: 14 }}>
               Meet the agents
             </p>
             <h2

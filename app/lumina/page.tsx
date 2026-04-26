@@ -311,6 +311,13 @@ function LuminaApp() {
   });
 
   useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap";
+    document.head.appendChild(link);
+  }, []);
+
+  useEffect(() => {
     console.log("isSpeaking:", isSpeaking);
   }, [isSpeaking]);
 
@@ -354,31 +361,20 @@ function LuminaApp() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
+              padding: "6px 16px",
+              borderRadius: 999,
+              background: "rgba(0,0,0,0.05)",
+              border: "1px solid rgba(0,0,0,0.08)",
+              backdropFilter: "blur(8px)",
             }}
           >
-            {isActive && (
-              <motion.span
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
-                style={{
-                  display: "block",
-                  width: 5,
-                  height: 5,
-                  borderRadius: "50%",
-                  background: isConnected ? "#8BAF8B" : "#B8A898",
-                  flexShrink: 0,
-                  transition: "background 1.5s ease",
-                }}
-              />
-            )}
-            <span style={{ fontSize: 13, fontWeight: 400, color: "rgba(0,0,0,0.4)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            <span style={{ fontFamily: "'General Sans', sans-serif", fontWeight: 500, fontSize: 11, color: "rgba(0,0,0,0.65)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               {agentName}
             </span>
           </motion.div>
 
           {/* Status line — fixed height prevents layout shift */}
-          <div style={{ height: 18 }}>
+          <div style={{ height: 18, marginTop: 10 }}>
             <AnimatePresence mode="wait">
               {isConnected && (
                 <motion.p
