@@ -242,13 +242,14 @@ function LuminaApp() {
 
   const { startSession, endSession, isSpeaking, status } = useConversation({
     onMessage: (payload) => {
-      console.log("message payload:", payload);
       if (payload.role !== "agent") return;
       const text = payload.message;
-      if (text.includes("Scholar"))    setAgentName("Scholar");
-      else if (text.includes("Closer"))    setAgentName("The Closer");
-      else if (text.includes("Visionary")) setAgentName("The Visionary");
-      else if (text.includes("Lumina"))    setAgentName("Lumina");
+      console.log("agent message:", text);
+      if (text.includes("Scholar"))         setAgentName("Scholar");
+      else if (text.includes("Closer"))     setAgentName("The Closer");
+      else if (text.includes("Visionary"))  setAgentName("Visionary");
+      else if (text.includes("Lumina"))     setAgentName("Lumina");
+      else                                  console.log("NO MATCH:", text);
     },
   });
 

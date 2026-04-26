@@ -89,23 +89,23 @@ function HeroOrb() {
 
         {/* Blobs — large travel distances make colour movement clearly visible */}
         <motion.div
-          animate={{ x: [0, 70, -50, 30, 0], y: [0, -50, 70, -30, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ x: [0, 90, -70, 50, 0], y: [0, -70, 90, -50, 0] }}
+          transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
           style={{ position: "absolute", width: "75%", height: "75%", top: "-10%", left: "-10%", background: "#EF8070", filter: "blur(48px)", borderRadius: "50%" }}
         />
         <motion.div
-          animate={{ x: [0, -60, 40, -20, 0], y: [0, 60, -40, 20, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ x: [0, -80, 60, -40, 0], y: [0, 80, -60, 40, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           style={{ position: "absolute", width: "68%", height: "68%", top: "-8%", right: "-8%", background: "#A472D8", filter: "blur(44px)", borderRadius: "50%" }}
         />
         <motion.div
-          animate={{ x: [0, 50, -70, 20, 0], y: [0, 65, -30, -50, 0] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ x: [0, 70, -90, 40, 0], y: [0, 85, -50, -70, 0] }}
+          transition={{ duration: 6.6, repeat: Infinity, ease: "easeInOut" }}
           style={{ position: "absolute", width: "62%", height: "62%", bottom: "-8%", right: "-8%", background: "#6AA8E2", filter: "blur(46px)", borderRadius: "50%" }}
         />
         <motion.div
-          animate={{ x: [0, -40, 60, -30, 0], y: [0, -60, 30, 50, 0] }}
-          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ x: [0, -60, 80, -50, 0], y: [0, -80, 50, 70, 0] }}
+          transition={{ duration: 7.8, repeat: Infinity, ease: "easeInOut" }}
           style={{ position: "absolute", width: "60%", height: "60%", bottom: "-8%", left: "-8%", background: "#BBA8E8", filter: "blur(40px)", borderRadius: "50%" }}
         />
 
@@ -417,10 +417,26 @@ function IntroOrb() {
       }}
     >
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #EDD5C3 0%, #D5BCE8 55%, #BBCFEA 100%)" }} />
-      <div style={{ position: "absolute", width: "72%", height: "72%", top: "-6%", left: "-6%", background: "#EF8070", filter: "blur(32px)", borderRadius: "50%", opacity: 0.85 }} />
-      <div style={{ position: "absolute", width: "65%", height: "65%", top: "-5%", right: "-5%", background: "#A472D8", filter: "blur(28px)", borderRadius: "50%", opacity: 0.7 }} />
-      <div style={{ position: "absolute", width: "60%", height: "60%", bottom: "-5%", right: "-5%", background: "#6AA8E2", filter: "blur(30px)", borderRadius: "50%", opacity: 0.65 }} />
-      <div style={{ position: "absolute", width: "58%", height: "58%", bottom: "-5%", left: "-5%", background: "#BBA8E8", filter: "blur(26px)", borderRadius: "50%", opacity: 0.7 }} />
+      <motion.div
+        animate={{ x: [0, 46, -34, 20, 0], y: [0, -34, 46, -20, 0] }}
+        transition={{ duration: 5.3, repeat: Infinity, ease: "easeInOut" }}
+        style={{ position: "absolute", width: "75%", height: "75%", top: "-10%", left: "-10%", background: "#EF8070", filter: "blur(32px)", borderRadius: "50%" }}
+      />
+      <motion.div
+        animate={{ x: [0, -40, 26, -14, 0], y: [0, 40, -26, 14, 0] }}
+        transition={{ duration: 6.6, repeat: Infinity, ease: "easeInOut" }}
+        style={{ position: "absolute", width: "68%", height: "68%", top: "-8%", right: "-8%", background: "#A472D8", filter: "blur(28px)", borderRadius: "50%" }}
+      />
+      <motion.div
+        animate={{ x: [0, 34, -46, 14, 0], y: [0, 43, -20, -34, 0] }}
+        transition={{ duration: 7.3, repeat: Infinity, ease: "easeInOut" }}
+        style={{ position: "absolute", width: "62%", height: "62%", bottom: "-8%", right: "-8%", background: "#6AA8E2", filter: "blur(30px)", borderRadius: "50%" }}
+      />
+      <motion.div
+        animate={{ x: [0, -26, 40, -20, 0], y: [0, -40, 20, 34, 0] }}
+        transition={{ duration: 8.6, repeat: Infinity, ease: "easeInOut" }}
+        style={{ position: "absolute", width: "60%", height: "60%", bottom: "-8%", left: "-8%", background: "#BBA8E8", filter: "blur(26px)", borderRadius: "50%" }}
+      />
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 34% 27%, rgba(255,255,255,0.38) 0%, transparent 52%)" }} />
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 50%, transparent 42%, rgba(35,15,55,0.16) 100%)" }} />
     </motion.div>
