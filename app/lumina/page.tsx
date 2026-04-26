@@ -16,6 +16,19 @@ type AgentConfig = {
   blob5: string;
 };
 
+const MODE_COLORS: Record<string, string> = {
+  Lumina: "#000000",
+  "The Scholar": "#3b82f6",
+  "The Visionary": "#a855f7",
+  "The Closer": "#f97316",
+};
+
+const TOOL_TO_AGENT: Record<string, string> = {
+  transfer_to_scholar: "The Scholar",
+  transfer_to_visionary: "The Visionary",
+  transfer_to_closer: "The Closer",
+};
+
 const AGENTS: Record<string, AgentConfig> = {
   Lumina: {
     dot: "#52C46E",
@@ -27,7 +40,7 @@ const AGENTS: Record<string, AgentConfig> = {
     blob4: "#BBA8E8",
     blob5: "#E89EC0",
   },
-  Scholar: {
+  "The Scholar": {
     dot: "#5B9FE8",
     shadowRgba: "rgba(55, 125, 210, 0.22)",
     haloBox: "0 0 0 2px rgba(100, 195, 240, 0.55), 0 0 32px 10px rgba(75, 170, 225, 0.2)",
@@ -47,7 +60,7 @@ const AGENTS: Record<string, AgentConfig> = {
     blob4: "#E88030",
     blob5: "#C84510",
   },
-  Visionary: {
+  "The Visionary": {
     dot: "#A472D8",
     shadowRgba: "rgba(100, 25, 178, 0.22)",
     haloBox: "0 0 0 2px rgba(190, 90, 238, 0.55), 0 0 32px 10px rgba(165, 68, 215, 0.2)",
@@ -295,18 +308,70 @@ function CustomCursor() {
 }
 
 function LuminaApp({ agentName, setAgentName }: { agentName: string; setAgentName: (name: string) => void }) {
-  const handleMessage = useCallback((payload: { role: string; message: string }) => {
-    if (payload.role !== "agent") return;
-    const text = payload.message;
-    console.log("agent message:", text);
-    if (text.includes("Scholar"))        setAgentName("Scholar");
-    else if (text.includes("Closer"))    setAgentName("The Closer");
-    else if (text.includes("Visionary")) setAgentName("Visionary");
-    else if (text.includes("Lumina"))    setAgentName("Lumina");
-    else                                 console.log("NO MATCH:", text);
+  // Resolve any tool-name-ish string to a specialist. Substring is intentional
+  // so "transfer_to_scholar", "transfer_to_the_scholar", "scholar_v2" all hit.
+  // Returns null if the string doesn't reference a specialist (we never want
+  // tool events to push us back to "Lumina" mid-session).
+  const resolveSpecialist = useCallback((raw: string): string | null => {
+    if (!raw) return null;
+    const direct = TOOL_TO_AGENT[raw];
+    if (direct) return direct;
+    const lower = raw.toLowerCase();
+    if (lower.includes("scholar"))   return "The Scholar";
+    if (lower.includes("visionary")) return "The Visionary";
+    if (lower.includes("closer"))    return "The Closer";
+    return null;
+  }, []);
+
+  const applyMode = useCallback((next: string, source: string) => {
+    console.log(`[mode] ${source} → ${next}`);
+    setAgentName(next);
   }, [setAgentName]);
 
-  const conversationConfig = useMemo(() => ({ onMessage: handleMessage }), [handleMessage]);
+  // PRIMARY: orchestrator-emitted event the moment the agent decides to transfer.
+  // Always wins. No locks. Requires `agent_tool_request` to be enabled in the
+  // agent's "Client Events" config in the ElevenLabs dashboard.
+  const handleAgentToolRequest = useCallback((evt: { tool_name: string; tool_call_id: string }) => {
+    console.log("[evt] agent_tool_request:", evt.tool_name);
+    const next = resolveSpecialist(evt.tool_name);
+    if (next) applyMode(next, `tool_request(${evt.tool_name})`);
+  }, [resolveSpecialist, applyMode]);
+
+  // PARALLEL: also fires after the transfer tool resolves. Same matching logic;
+  // updating again is a no-op when the name already matches.
+  const handleAgentToolResponse = useCallback((evt: { tool_name: string }) => {
+    console.log("[evt] agent_tool_response:", evt.tool_name);
+    const next = resolveSpecialist(evt.tool_name);
+    if (next) applyMode(next, `tool_response(${evt.tool_name})`);
+  }, [resolveSpecialist, applyMode]);
+
+  // PARALLEL: covers the case where the transfer is implemented as a *client*
+  // tool rather than a server-side agent tool.
+  const handleUnhandledClientToolCall = useCallback((evt: { tool_name: string; parameters: Record<string, unknown> }) => {
+    console.log("[evt] client_tool_call:", evt.tool_name, evt.parameters);
+    const next = resolveSpecialist(evt.tool_name);
+    if (next) applyMode(next, `client_tool(${evt.tool_name})`);
+  }, [resolveSpecialist, applyMode]);
+
+  // FALLBACK: transcript-based matching. Only checks the first ~80 chars so a
+  // mid-response reference ("as the Scholar mentioned…") can't hijack the UI.
+  // Never sets "Lumina", so it's safe to leave unlocked across specialist swaps.
+  const handleMessage = useCallback((payload: { role: string; message: string }) => {
+    if (payload.role !== "agent") return;
+    const head = payload.message.slice(0, 80);
+    const next = resolveSpecialist(head);
+    if (next && next !== agentName) applyMode(next, "transcript");
+  }, [resolveSpecialist, applyMode, agentName]);
+
+  const conversationConfig = useMemo(
+    () => ({
+      onMessage: handleMessage,
+      onAgentToolRequest: handleAgentToolRequest,
+      onAgentToolResponse: handleAgentToolResponse,
+      onUnhandledClientToolCall: handleUnhandledClientToolCall,
+    }),
+    [handleMessage, handleAgentToolRequest, handleAgentToolResponse, handleUnhandledClientToolCall],
+  );
 
   const { startSession, endSession, isSpeaking, status } = useConversation(conversationConfig);
 
@@ -328,7 +393,9 @@ function LuminaApp({ agentName, setAgentName }: { agentName: string; setAgentNam
   const handleToggle = async () => {
     if (isActive) {
       endSession();
+      setAgentName("Lumina");
     } else {
+      setAgentName("Lumina");
       await startSession({
         agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID!,
       });
@@ -336,7 +403,7 @@ function LuminaApp({ agentName, setAgentName }: { agentName: string; setAgentNam
   };
 
   return (
-    <div className="relative h-screen w-full select-none overflow-hidden" style={{ background: "#F5F4EF", cursor: "none" }}>
+    <div className="relative h-screen w-full select-none overflow-hidden" style={{ background: "#FFFFFF", cursor: "none" }}>
       <CustomCursor />
       {/* Wordmark — DM Sans */}
       <header className="absolute top-0 left-0 p-8 z-10">
@@ -368,7 +435,17 @@ function LuminaApp({ agentName, setAgentName }: { agentName: string; setAgentNam
               backdropFilter: "blur(8px)",
             }}
           >
-            <span style={{ fontFamily: "'General Sans', sans-serif", fontWeight: 600, fontSize: 11, color: "#000000", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            <span
+              style={{
+                fontFamily: "'General Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: 11,
+                color: MODE_COLORS[agentName] ?? "#000000",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                transition: "color 0.4s ease-in-out",
+              }}
+            >
               {agentName}
             </span>
           </motion.div>

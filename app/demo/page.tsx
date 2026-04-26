@@ -105,7 +105,7 @@ function DemoOrb() {
 
 export default function DemoPage() {
   return (
-    <div style={{ background: "#F5F4EF", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: "#FFFFFF", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: "80px 32px" }}>

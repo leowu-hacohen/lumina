@@ -398,13 +398,13 @@ function AgentCard({ agent, delay }: { agent: AgentDef; delay: number }) {
     const cy = rect.top + rect.height / 2;
     const dx = (e.clientX - cx) / (rect.width / 2);
     const dy = (e.clientY - cy) / (rect.height / 2);
-    const rotY =  dx * 8;
-    const rotX = -dy * 8;
+    const rotY =  dx * 14;
+    const rotX = -dy * 14;
     const shineX = ((e.clientX - rect.left) / rect.width) * 100;
     const shineY = ((e.clientY - rect.top)  / rect.height) * 100;
     if (ref.current) {
       ref.current.style.transition = "transform 0.15s ease";
-      ref.current.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      ref.current.style.transform = `perspective(650px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(8px)`;
     }
     setShine({ x: shineX, y: shineY });
   };
@@ -412,7 +412,7 @@ function AgentCard({ agent, delay }: { agent: AgentDef; delay: number }) {
   const onMouseLeave = () => {
     if (ref.current) {
       ref.current.style.transition = "transform 0.4s ease";
-      ref.current.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg)";
+      ref.current.style.transform = "perspective(650px) rotateX(0deg) rotateY(0deg) translateZ(0)";
     }
     setHovering(false);
   };
@@ -627,22 +627,67 @@ function AgentCycler() {
   const audioActive = audioState !== "idle";
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      {/* Ambient colored blobs — give the glass card something to refract */}
+      <motion.div
+        animate={{ x: [0, 18, -10, 0], y: [0, -14, 12, 0] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          position: "absolute", width: 220, height: 220, borderRadius: "50%",
+          background: "#EF8070", filter: "blur(70px)", opacity: 0.28,
+          top: -40, left: -30, pointerEvents: "none", zIndex: 0,
+        }}
+      />
+      <motion.div
+        animate={{ x: [0, -22, 14, 0], y: [0, 16, -12, 0] }}
+        transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          position: "absolute", width: 240, height: 240, borderRadius: "50%",
+          background: "#A472D8", filter: "blur(80px)", opacity: 0.24,
+          top: 40, right: -50, pointerEvents: "none", zIndex: 0,
+        }}
+      />
+      <motion.div
+        animate={{ x: [0, 14, -18, 0], y: [0, -10, 16, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          position: "absolute", width: 200, height: 200, borderRadius: "50%",
+          background: "#6AA8E2", filter: "blur(72px)", opacity: 0.22,
+          bottom: -30, left: "30%", pointerEvents: "none", zIndex: 0,
+        }}
+      />
+
       <div style={{
-        borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
-        padding: "36px 32px", background: "#EDECE6",
+        position: "relative", zIndex: 1,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.55)",
+        padding: "36px 32px",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.38) 100%)",
+        backdropFilter: "blur(28px) saturate(180%)",
+        WebkitBackdropFilter: "blur(28px) saturate(180%)",
+        boxShadow: "0 12px 40px rgba(120, 90, 170, 0.10), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(120, 90, 170, 0.08)",
         display: "flex", flexDirection: "column", gap: 28,
+        overflow: "hidden",
       }}>
-        <p style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(160,100,140,0.65)", margin: 0 }}>
+        {/* Diagonal sheen — fakes the specular highlight on a real glass surface */}
+        <div
+          style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.18) 100%)",
+            borderRadius: 22,
+          }}
+        />
+
+        <p style={{ position: "relative", zIndex: 1, fontSize: 13, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(160,100,140,0.65)", margin: 0 }}>
           Switch modes instantly
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
           {CYCLER_AGENTS.map((agent, i) => (
             <motion.div
               key={agent.name}
               onClick={() => handleClick(i)}
-              whileHover={{ background: activeIdx !== i ? "rgba(0,0,0,0.03)" : "transparent" }}
+              whileHover={{ background: activeIdx !== i ? "rgba(255,255,255,0.18)" : "transparent" }}
               transition={{ duration: 0.15 }}
               style={{ position: "relative", borderRadius: 12, cursor: "pointer" }}
             >
@@ -653,8 +698,9 @@ function AgentCycler() {
                   transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   style={{
                     position: "absolute", inset: 0, borderRadius: 12,
-                    background: "rgba(255,255,255,0.72)",
-                    border: "1px solid rgba(0,0,0,0.07)",
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 100%)",
+                    border: "1px solid rgba(255,255,255,0.7)",
+                    boxShadow: "0 4px 16px rgba(120, 90, 170, 0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
                   }}
                 />
               )}
@@ -695,7 +741,7 @@ function AgentCycler() {
           ))}
         </div>
 
-        <p style={{ fontSize: 13, color: "rgba(0,0,0,0.35)", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ position: "relative", zIndex: 1, fontSize: 13, color: "rgba(0,0,0,0.42)", lineHeight: 1.6, margin: 0 }}>
           Each agent remembers its lane.<br />You just show up and talk.
         </p>
       </div>
@@ -785,7 +831,7 @@ function IntroOverlay({ onComplete }: { onComplete: () => void }) {
       transition={{ duration: 0.6, ease: "easeInOut" }}
       style={{
         position: "fixed", inset: 0, zIndex: 50,
-        background: "#F5F4EF",
+        background: "#FFFFFF",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         gap: 22,
@@ -839,7 +885,7 @@ export default function LandingPage() {
         animate={{ opacity: showIntro ? 0 : 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-    <div style={{ background: "#F5F4EF", minHeight: "100vh" }}>
+    <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section
@@ -998,14 +1044,45 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
-      <section style={{ background: "#F5F4EF", padding: "120px max(32px, 7vw)", position: "relative", overflow: "hidden" }}>
-        {/* Background ambient orbs */}
-        <motion.div animate={{ x: [0,30,-20,0], y: [0,-25,20,0] }} transition={{ duration: 9,  repeat: Infinity, ease: "easeInOut" }}
-          style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "#EF8070", filter: "blur(60px)", opacity: 0.18, top: "15%",    left: "10%",   pointerEvents: "none" }} />
-        <motion.div animate={{ x: [0,-25,20,0], y: [0,20,-30,0] }} transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-          style={{ position: "absolute", width: 100, height: 100, borderRadius: "50%", background: "#A472D8", filter: "blur(50px)", opacity: 0.15, top: "15%",    right: "10%",  pointerEvents: "none" }} />
-        <motion.div animate={{ x: [0,20,-30,0], y: [0,-20,15,0] }} transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
-          style={{ position: "absolute", width: 90,  height: 90,  borderRadius: "50%", background: "#6AA8E2", filter: "blur(45px)", opacity: 0.14, bottom: "15%", left: "50%",   transform: "translateX(-50%)", pointerEvents: "none" }} />
+      <section style={{ background: "#FFFFFF", padding: "120px max(32px, 7vw)", position: "relative", overflow: "hidden" }}>
+        {/* Halo cluster — orbs centered around the breathing orb, fades to white at edges */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 1100, height: 560,
+            pointerEvents: "none",
+            maskImage: "radial-gradient(ellipse at center, black 15%, transparent 65%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 15%, transparent 65%)",
+          }}
+        >
+          <motion.div
+            animate={{ x: [0, 30, -20, 0], y: [0, -25, 20, 0] }}
+            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+            style={{ position: "absolute", width: 420, height: 420, borderRadius: "50%", background: "#EF8070", filter: "blur(130px)", opacity: 0.30, top: "18%", left: "12%" }}
+          />
+          <motion.div
+            animate={{ x: [0, -25, 20, 0], y: [0, 20, -25, 0] }}
+            transition={{ duration: 17, repeat: Infinity, ease: "easeInOut" }}
+            style={{ position: "absolute", width: 460, height: 460, borderRadius: "50%", background: "#A472D8", filter: "blur(140px)", opacity: 0.26, top: "14%", right: "12%" }}
+          />
+          <motion.div
+            animate={{ x: [0, 20, -30, 0], y: [0, -20, 25, 0] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+            style={{ position: "absolute", width: 480, height: 480, borderRadius: "50%", background: "#6AA8E2", filter: "blur(150px)", opacity: 0.24, bottom: "10%", left: "50%", transform: "translateX(-50%)" }}
+          />
+          <motion.div
+            animate={{ x: [0, -18, 22, 0], y: [0, 22, -18, 0] }}
+            transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }}
+            style={{ position: "absolute", width: 360, height: 360, borderRadius: "50%", background: "#BBA8E8", filter: "blur(120px)", opacity: 0.22, top: "45%", left: "10%" }}
+          />
+          <motion.div
+            animate={{ x: [0, 22, -18, 0], y: [0, -18, 22, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+            style={{ position: "absolute", width: 340, height: 340, borderRadius: "50%", background: "#E89EC0", filter: "blur(115px)", opacity: 0.22, top: "45%", right: "10%" }}
+          />
+        </div>
 
         <FadeIn>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}>
